@@ -6,18 +6,33 @@ namespace LNS
 {
     class Route
     {
-        List<Visit> visits;
-        int remainingCapacity;
+        public List<Visit> visits;
+        public int maxCapacity;
+        public int remainingCapacity;
 
         public Route(List<Visit> visits, int capacity)
         {
             this.visits = visits;
+            this.maxCapacity = capacity;
             this.remainingCapacity = capacity;
 
             foreach (Visit visit in visits)
             {
                 remainingCapacity -= visit.GetDemand();
             }
+        }
+
+        public Route Clone()
+        {
+            Route clone = (Route)this.MemberwiseClone();
+            List<Visit> visitClone = new List<Visit>();
+            foreach (Visit visit in clone.visits)
+            {
+                visitClone.Add(visit.Clone());
+            }
+            clone.visits = visitClone;
+
+            return clone;
         }
 
         public void AddVisit(Visit visit, int position)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace LNS
 {
@@ -12,6 +13,7 @@ namespace LNS
         Visit depot;
 
         List<Visit> visits;
+        List<int> visitIds;
 
         double maxDistance = 0;
         int maxServiceTime;
@@ -19,6 +21,7 @@ namespace LNS
         public Problem(List<Visit> visits, int depotX, int depotY, int capacity, int maxServiceTime)
         {
             this.visits = visits;
+            this.visitIds = Enumerable.Range(1, visits.Count).ToList();
             this.capacity = capacity;
             this.depot = new Visit(depotX, depotY);
             this.maxServiceTime = maxServiceTime;
@@ -29,6 +32,7 @@ namespace LNS
         private void findDistances()
         {
             List<double> depotDistances = new List<double>();
+            List<int> visitIds = new List<int>();
             foreach (Visit visit in visits)
             {
                 // Get x and y for visit
@@ -42,6 +46,7 @@ namespace LNS
 
                 // Set distance to other visits for current visit
                 List<double> distances = new List<double>();
+                List<int> ids = new List<int>();
                 foreach (Visit otherVisit in visits)
                 {
                     int xDifferenceVisits = xCoordinate - otherVisit.GetX();
@@ -53,10 +58,13 @@ namespace LNS
                     {
                         maxDistance = distance;
                     }
+
+                    ids.Add(otherVisit.GetId());
                 }
-                visitDistances.Add(new VisitDistance(visit, visits, distances));
+                visitDistances.Add(new VisitDistance(visit.GetId(), ids, distances));
+                visitIds.Add(visit.GetId());
             }
-            distancesFromDepot = new VisitDistance(depot, visits, depotDistances);
+            distancesFromDepot = new VisitDistance(0, visitIds, depotDistances);
         }
 
         public int GetAmountVisits()
@@ -72,7 +80,7 @@ namespace LNS
         public double GetVisitDistance(Visit visit1, Visit visit2)
         {
             // Get distances of visit1
-            int indexVisit1 = visits.IndexOf(visit1);
+            int indexVisit1 = visitIds.IndexOf(visit1.GetId());
             VisitDistance visit1Distances = visitDistances[indexVisit1];
 
             // Find visit2 in distances visit1

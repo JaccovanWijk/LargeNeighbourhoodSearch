@@ -5,10 +5,10 @@ using System.Linq;
 
 namespace LNS
 {
-    class RoutingPlan // VrpSolution
+    class RoutingPlan : ICloneable// VrpSolution
     {
         List<Route> routes;
-        List<Visit> removed = new List<Visit>();
+        //List<Visit> removed;
         int vehicles;
         Problem problem;
         double planCost;
@@ -19,6 +19,7 @@ namespace LNS
             this.routes = routes;
             this.problem = problem;
             this.vehicles = routes.Count;
+            //this.removed = new List<Visit>();
 
             allVisits = new List<Visit>();
             foreach (Route route in routes)
@@ -28,6 +29,77 @@ namespace LNS
                     allVisits.Add(visit);
                 }
             }
+        }
+
+        public Problem GetProblem()
+        {
+            return problem;
+        }
+
+        public object Clone()
+        {
+            return this;
+        }
+
+        public void Tester(Visit visit, (int,int) position)
+        {
+            foreach (Route route in routes)
+            {
+                if (route.Contains(visit))
+                {
+                    route.RemoveVisit(visit);
+                }
+            }
+            int count = routes.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (routes[i].GetVisits().Count == 0)
+                {
+                    routes.Remove(routes[i]);
+                }
+                count = routes.Count;
+            }
+
+            routes[position.Item1].AddVisit(visit, position.Item2);
+
+        }
+
+        public void PlaceVisit(Visit visit, (int, int) position)
+        {
+            // Remove visit from previous position
+            foreach (Route route in routes)
+            {
+                if (route.Contains(visit))
+                {
+                    route.RemoveVisit(visit);
+                    break;
+                }
+            }
+
+            // Place visit at next position
+            routes[position.Item1].AddVisit(visit, position.Item2);
+
+            // Check for empty routes and delete them
+            int count = routes.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (routes[i].GetVisits().Count == 0)
+                {
+                    routes.Remove(routes[i]);
+                }
+                count = routes.Count;
+            }
+        }
+
+        public List<Route> CopyRoutes()
+        {
+            List<Route> copy = new List<Route>();
+            foreach (Route route in routes)
+            {
+                Route copyRoute = route.Clone();
+                copy.Add(copyRoute);
+            }
+            return copy;
         }
         
         public double CalculateCost()
@@ -57,6 +129,7 @@ namespace LNS
             return planCost;
         }
 
+        /*
         public void RemoveVisit(Visit visit)
         {
             foreach (Route route in routes)
@@ -69,6 +142,7 @@ namespace LNS
                 }
             }
         }
+        
 
         public void PlaceVisit(Visit visit, (int, int) position)
         {
@@ -82,6 +156,7 @@ namespace LNS
                 }
             }
         }
+        */
         
         public List<Visit> RankRelatedness(Visit visit, List<Visit> removed)
         {
@@ -89,12 +164,9 @@ namespace LNS
             List<Visit> related = allVisits.OrderByDescending(o => Relatedness(visit, o)).ToList();
 
             // Exclude removed visits
-            foreach (Visit newVisit in related)
+            foreach(Visit visit1 in removed)
             {
-                if (removed.Contains(newVisit))
-                {
-                    related.Remove(visit);
-                }
+                related.Remove(visit1);
             }
 
             return related;
@@ -131,33 +203,58 @@ namespace LNS
 
         public List<(int, int)> RankedPositions(Visit visit)
         {
-            // CHECK FOR PLACES WHERE TIME WINDOW ARE NOT VIOLATED, MAXSERVICETIME IS NOT VIOLATED, CALCULATE POSiTION WITH MINIMUM COST
-
-            // Add all positions without filter
+            // Make list of all routes and positions
             List<(int, int)> positions = new List<(int, int)>();
             for (int i = 0; i < routes.Count; i++)
             {
-                for (int j = 0; j < routes[i].GetVisits().Count; j++)
+                // Loop over possible positions in current route
+                for (int j = 0; j < routes[i].GetVisits().Count + 1; j++)
                 {
+                    // TODO: CHECK IF TIMEWINDOWS, MAXSERVICETIME, AND CAPACITY WORK
+
                     positions.Add((i, j));
                 }
             }
 
-            /*
-            Route bestRoute;
-            int location;
-            double currentCost = CalculateCost();
-            foreach (Route route in routes)
-            {
-                // Calculate cost for visit in first place route
-                location = 0;
-                currentCost 
-            }
-            */
+            List<(int, int)> sortedPositions = positions.OrderBy(o => Score(visit, o)).ToList();
 
             return positions;
         }
-        
+
+        public double Score(Visit visit, (int, int) location)
+        {
+            int route = location.Item1;
+            int position = location.Item2;
+            double cost = 0;
+            // if j = 0, get depot -> visit -> visits[j] without depot -> visit[j]
+            if (position == 0)
+            {
+                cost += problem.GetDistanceFromDepot(visit);
+                cost += problem.GetVisitDistance(visit, routes[route].GetVisits()[position]);
+
+                cost -= problem.GetDistanceFromDepot(routes[route].GetVisits()[position]);
+            }
+            // if 0 < j < count, get visits[j-1] -> visit -> visits[j] without visits[j-1] -> visits[j]
+            else if (position > 0 && position < routes[route].GetVisits().Count)
+            {
+                cost += problem.GetVisitDistance(routes[route].GetVisits()[position - 1], visit);
+                cost += problem.GetVisitDistance(visit, routes[route].GetVisits()[position]);
+
+                cost -= problem.GetVisitDistance(routes[route].GetVisits()[position - 1], routes[route].GetVisits()[position]);
+            }
+            // if j = count, get visits[j-1] -> visit -> depot without visits[j-1] -> depot
+            else if (position == routes[route].GetVisits().Count)
+            {
+                cost += problem.GetVisitDistance(routes[route].GetVisits()[position - 1], visit);
+                cost += problem.GetDistanceFromDepot(visit);
+
+                cost -= problem.GetDistanceFromDepot(routes[route].GetVisits()[position - 1]);
+            }
+
+            return cost;
+        }
+
+
         public void PrintRoutingPlan()
         {
             for (int i = 0; i < routes.Count; i++)
@@ -182,6 +279,7 @@ namespace LNS
             return allVisits;
         }
 
+        /*
         public List<Visit> GetRemoved()
         {
             return removed;
@@ -191,5 +289,6 @@ namespace LNS
         {
             this.removed = removed;
         }
+        */
     }
 }

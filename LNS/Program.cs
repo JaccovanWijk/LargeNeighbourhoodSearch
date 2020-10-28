@@ -24,7 +24,7 @@ namespace LNS
             RoutingPlan initialPlan = new RoutingPlan(initialRoutes, problem);
 
             // Print Initial Plan
-            initialPlan.PrintRoutingPlan();
+            //initialPlan.PrintRoutingPlan();
 
             // Print distances between visits
             /*

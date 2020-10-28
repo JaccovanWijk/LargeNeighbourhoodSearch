@@ -1,30 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace LNS
 {
     class VisitDistance
     {
-        Visit currentVisit;
-        List<Visit> otherVisits;
+        int currentVisitId;
+        List<int> otherVisitsIds;
         List<double> distances;
 
-        public VisitDistance(Visit currentVisit, List<Visit> otherVisits, List<double> distances)
+        public VisitDistance(int currentVisit, List<int> otherVisits, List<double> distances)
         {
-            this.currentVisit = currentVisit;
-            this.otherVisits = otherVisits;
+            this.currentVisitId = currentVisit;
+            this.otherVisitsIds = otherVisits;
             this.distances = distances;
         }
 
-        public Visit GetVisit()
+        public int GetVisitId()
         {
-            return currentVisit;
+            return currentVisitId;
         }
 
         public double GetDistance(Visit otherVisit)
         {
-            int indexVisit = otherVisits.IndexOf(otherVisit);
+            // Get right visit (reference is changed for copies)
+            int indexVisit = otherVisitsIds.IndexOf(otherVisit.GetId());
             return distances[indexVisit];
         }
     }
