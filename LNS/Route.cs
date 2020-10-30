@@ -42,7 +42,15 @@ namespace LNS
 
         public void RemoveVisit(Visit visit)
         {
-            visits.Remove(visit);
+            //visits.Remove(visit);
+            foreach (Visit visit1 in visits)
+            {
+                if (visit.GetId() == visit1.GetId())
+                {
+                    visits.Remove(visit1);
+                    break;
+                }
+            }
         }
 
         public List<Visit> GetVisits()
@@ -57,7 +65,16 @@ namespace LNS
 
         public bool Contains(Visit visit)
         {
-            return (visits.Contains(visit));
+            //return (visits.Contains(visit));
+
+            foreach (Visit visit1 in visits)
+            {
+                if (visit.GetId() == visit1.GetId())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

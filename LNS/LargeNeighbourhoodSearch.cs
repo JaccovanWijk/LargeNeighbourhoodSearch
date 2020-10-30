@@ -36,7 +36,6 @@ namespace LNS
 
                 List<Visit> removed = RemoveVisits(newPlan);
                 Reinsert(newPlan, removed, discrepancies);
-                break;
             }
             return bestPlan;
         }
@@ -77,7 +76,7 @@ namespace LNS
         {
             //List<Visit> toInsert = plan.GetRemoved();
 
-            
+            /*
             Console.WriteLine(1);
             bestPlan.PrintRoutingPlan();
 
@@ -87,8 +86,12 @@ namespace LNS
 
             Console.WriteLine(3);
             bestPlan.PrintRoutingPlan();
+            */
            
-            /*
+            // WORKING FOR TESTER, BUT CODE UNDERNEATH DOESNT GET THE RIGHT ROUTES AND NEVER DELETES!
+
+
+            
             if (toInsert.Count == 0)
             {
                 // Check for new best plan
@@ -125,7 +128,7 @@ namespace LNS
                     }
                 }
                 
-            }*/
+            }
         }
         
 

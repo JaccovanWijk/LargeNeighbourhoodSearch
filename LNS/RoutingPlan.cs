@@ -76,8 +76,6 @@ namespace LNS
                 }
             }
 
-            // Place visit at next position
-            routes[position.Item1].AddVisit(visit, position.Item2);
 
             // Check for empty routes and delete them
             int count = routes.Count;
@@ -89,6 +87,10 @@ namespace LNS
                 }
                 count = routes.Count;
             }
+
+
+            // Place visit at next position
+            routes[position.Item1].AddVisit(visit, position.Item2);
         }
 
         public List<Route> CopyRoutes()
