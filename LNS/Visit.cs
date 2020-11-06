@@ -33,6 +33,15 @@ namespace LNS
             this.yCoordinate = yCoordinate;
         }
 
+        public bool Equals(Visit visit)
+        {
+            if (visit.GetId() == this.id)
+            {
+                return true;
+            }
+            return false;
+        }
+
         public Visit Clone()
         {
             return (Visit)this.MemberwiseClone();

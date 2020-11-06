@@ -24,7 +24,7 @@ namespace LNS
             RoutingPlan initialPlan = new RoutingPlan(initialRoutes, problem);
 
             // Print Initial Plan
-            //initialPlan.PrintRoutingPlan();
+            initialPlan.PrintRoutingPlan();
 
             // Print distances between visits
             /*
@@ -57,7 +57,8 @@ namespace LNS
 
             LargeNeighbourhoodSearch LNS = new LargeNeighbourhoodSearch(initialPlan, 
                 maxIterations, discrepancies, attempts, determinism);
-            LNS.Search();
+            RoutingPlan plan = LNS.Search();
+            plan.PrintRoutingPlan();
         }
     }
     

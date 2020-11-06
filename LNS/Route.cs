@@ -25,19 +25,29 @@ namespace LNS
         public Route Clone()
         {
             Route clone = (Route)this.MemberwiseClone();
+            
             List<Visit> visitClone = new List<Visit>();
             foreach (Visit visit in clone.visits)
             {
                 visitClone.Add(visit.Clone());
             }
             clone.visits = visitClone;
+            
+            //clone.visits = visits; WERKT NIET?
 
             return clone;
         }
 
         public void AddVisit(Visit visit, int position)
         {
-            visits.Insert(position, visit);
+            if (position <= visits.Count)
+            {
+                visits.Insert(position, visit);
+            }
+            else
+            {
+                visits.Add(visit);
+            }
         }
 
         public void RemoveVisit(Visit visit)
@@ -58,6 +68,11 @@ namespace LNS
             return visits;
         }
 
+        public int GetAmountVisits()
+        {
+            return visits.Count;
+        }
+
         public int GetRemainingCapacity()
         {
             return remainingCapacity;
@@ -69,12 +84,31 @@ namespace LNS
 
             foreach (Visit visit1 in visits)
             {
-                if (visit.GetId() == visit1.GetId())
+                if (visit.Equals(visit1))
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        public bool Equals(Route route)
+        {
+            if (route.GetAmountVisits() != visits.Count)
+            {
+                return false;
+            }
+
+            List<Visit> otherVisits = route.GetVisits();
+            for (int i = 0; i < visits.Count; i++)
+            {
+                if (!visits[i].Equals(otherVisits[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

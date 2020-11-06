@@ -72,6 +72,11 @@ namespace LNS
             return visits.Count;
         }
 
+        public int GetMaxServiceTime()
+        {
+            return maxServiceTime;
+        }
+        
         public List<Visit> GetVisits()
         {
             return visits;
@@ -102,5 +107,9 @@ namespace LNS
             return capacity;
         }
         
+        public Visit GetDepot()
+        {
+            return depot;
+        }
     }
 }

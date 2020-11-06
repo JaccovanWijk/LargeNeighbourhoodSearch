@@ -99,7 +99,7 @@ namespace LNS
                 double newCost = plan.CalculateCost();
                 if (newCost < bestPlanCost)
                 {
-                    plan.PrintRoutingPlan();
+                    //plan.PrintRoutingPlan();
                     bestPlan = plan;
                     bestPlanCost = newCost;
                 }

@@ -41,7 +41,7 @@ namespace LNS
             return this;
         }
 
-        public void Tester(Visit visit, (int,int) position)
+        public void Tester(Visit visit, (int, int) position)
         {
             foreach (Route route in routes)
             {
@@ -103,7 +103,7 @@ namespace LNS
             }
             return copy;
         }
-        
+
         public double CalculateCost()
         {
             planCost = 0;
@@ -159,14 +159,14 @@ namespace LNS
             }
         }
         */
-        
+
         public List<Visit> RankRelatedness(Visit visit, List<Visit> removed)
         {
             // Rank them by relatedness
             List<Visit> related = allVisits.OrderByDescending(o => Relatedness(visit, o)).ToList();
 
             // Exclude removed visits
-            foreach(Visit visit1 in removed)
+            foreach (Visit visit1 in removed)
             {
                 related.Remove(visit1);
             }
@@ -185,8 +185,8 @@ namespace LNS
             int sameRoute = 0;
 
             return 1 / (normDistance + sameRoute);
-        }   
-        
+        }
+
         public Visit ChooseFarthest(List<Visit> visits)
         {
             double maxDistance = 0;
@@ -207,19 +207,29 @@ namespace LNS
         {
             // Make list of all routes and positions
             List<(int, int)> positions = new List<(int, int)>();
-            for (int i = 0; i < routes.Count; i++)
+            for (int i = 0; i < routes.Count - 1; i++)
             {
                 // Loop over possible positions in current route
                 for (int j = 0; j < routes[i].GetVisits().Count + 1; j++)
                 {
-                    // TODO: CHECK IF TIMEWINDOWS, MAXSERVICETIME, AND CAPACITY WORK
-
-                    positions.Add((i, j));
+                    // TODO: CHECK IF (TIMEWINDOWS, MAXSERVICETIME, )AND CAPACITY WORK, AND ITS OLD POSTITION
+                    // Check if it fits in timewindow
+                    if (TimeWindowCheck(visit, (i,j)) && CapacityCheck(visit, i))
+                    {
+                        positions.Add((i, j));
+                    }
                 }
             }
 
+            // Sort positions on score
             List<(int, int)> sortedPositions = positions.OrderBy(o => Score(visit, o)).ToList();
-
+            /*
+            foreach ((int, int) position in sortedPositions)
+            {
+                double score = Score(visit, position);
+                Console.WriteLine(score);
+            }
+            */
             return positions;
         }
 
@@ -292,5 +302,69 @@ namespace LNS
             this.removed = removed;
         }
         */
+
+        public bool TimeWindowCheck(Visit visit, (int, int) position)
+        {
+            // Get route and visits where visit is tested
+            Route route = routes[position.Item1];
+            List<Visit> visits = route.GetVisits();
+
+            // Get previous visit (check if it is the depot)
+            //Visit prevVisit = problem.GetDepot();
+            int prevWindowStart = 0;
+            //int prevWindowEnd = problem.GetMaxServiceTime();
+            int prevDropTime = 0;
+            if (position.Item2 > 0)
+            {
+                //prevVisit = visits[position.Item2 - 1];
+                prevWindowStart = visits[position.Item2 - 1].GetWindowStart();
+                //prevWindowEnd = visits[position.Item2 - 1].GetWindowEnd();
+                prevDropTime = visits[position.Item2 - 1].GetDropTime();
+            }
+
+            // Get next visit (check if it is the depot)
+            //Visit nextVisit = problem.GetDepot();
+            //int nextWindowStart = 0;
+            int nextWindowEnd = problem.GetMaxServiceTime();
+            if (position.Item2 < visits.Count)
+            {
+                //nextVisit = visits[position.Item2];
+                //nextWindowStart = visits[position.Item2].GetWindowStart();
+                nextWindowEnd = visits[position.Item2].GetWindowEnd();
+            }
+
+            // Get begin and end of window for visit
+            int beginWindow = visit.GetWindowStart();
+            int endWindow = visit.GetWindowEnd();
+            int dropTime = visit.GetDropTime();
+
+            // Check if begin window is after begin previous window + droptime previouw visit 
+            if (beginWindow < prevWindowStart + prevDropTime)
+            {
+                return false;
+            }
+
+            // Check if end window is before end next window + droptime next visit
+            if (endWindow + dropTime > nextWindowEnd)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool CapacityCheck(Visit visit, int route)
+        {
+            // TODO: FIX CURRENT CAPACITY
+            /*
+            int currentCapacity = routes[route].GetRemainingCapacity();
+            if (currentCapacity - visit.GetDemand() > 0)
+            {
+                return true;
+            }
+            return false;
+            */
+            return true;
+        }
     }
 }
