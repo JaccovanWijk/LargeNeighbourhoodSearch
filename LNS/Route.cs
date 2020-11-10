@@ -75,6 +75,11 @@ namespace LNS
 
         public int GetRemainingCapacity()
         {
+            remainingCapacity = maxCapacity;
+            foreach(Visit visit in visits)
+            {
+                remainingCapacity -= visit.GetDemand();
+            }
             return remainingCapacity;
         }
 

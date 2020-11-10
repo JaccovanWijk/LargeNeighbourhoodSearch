@@ -181,8 +181,26 @@ namespace LNS
             double distance = problem.GetVisitDistance(visit1, visit2);
             double normDistance = distance / maxDistance;
 
-            // TODO: HOW CAN I CHECK IF A REMOVED VISIT IS IN THE SAME ROUTE? V_ij OF RELATEDNESS
+            // Check if served by same vehicle
             int sameRoute = 0;
+            foreach (Route route in routes)
+            {
+                if (route.Contains(visit1) && route.Contains(visit2))
+                {
+                    sameRoute = 1;
+                    break;
+                }
+
+                if (route.Contains(visit1))
+                {
+                    break;
+                }
+
+                if (route.Contains(visit2))
+                {
+                    break;
+                }
+            }
 
             return 1 / (normDistance + sameRoute);
         }
@@ -224,13 +242,21 @@ namespace LNS
             // Sort positions on score
             List<(int, int)> sortedPositions = positions.OrderBy(o => Score(visit, o)).ToList();
             /*
+            Console.WriteLine("Visit " + visit.GetId());
+            Console.WriteLine("begin" + visit.GetWindowStart());
+            Console.WriteLine(sortedPositions.Count);
+            int hoi = 0;
+            */
+            /*
+            Console.WriteLine("Visit id: " + visit.GetId());
             foreach ((int, int) position in sortedPositions)
             {
                 double score = Score(visit, position);
                 Console.WriteLine(score);
             }
+            int hoi = 0;
             */
-            return positions;
+            return sortedPositions;
         }
 
         public double Score(Visit visit, (int, int) location)
@@ -279,6 +305,7 @@ namespace LNS
                 }
                 Console.WriteLine("Depot.");
             }
+            Console.WriteLine();
         }
 
         public int GetAmountVisits()
@@ -324,12 +351,12 @@ namespace LNS
 
             // Get next visit (check if it is the depot)
             //Visit nextVisit = problem.GetDepot();
-            //int nextWindowStart = 0;
+            int nextWindowStart = 0;
             int nextWindowEnd = problem.GetMaxServiceTime();
             if (position.Item2 < visits.Count)
             {
                 //nextVisit = visits[position.Item2];
-                //nextWindowStart = visits[position.Item2].GetWindowStart();
+                nextWindowStart = visits[position.Item2].GetWindowStart();
                 nextWindowEnd = visits[position.Item2].GetWindowEnd();
             }
 
@@ -339,14 +366,26 @@ namespace LNS
             int dropTime = visit.GetDropTime();
 
             // Check if begin window is after begin previous window + droptime previouw visit 
-            if (beginWindow < prevWindowStart + prevDropTime)
+            if (beginWindow + dropTime > nextWindowEnd)//beginWindow < prevWindowStart + prevDropTime)
             {
+                /*
+                Console.WriteLine("hoi1");
+                Console.WriteLine(beginWindow);
+                Console.WriteLine(dropTime);
+                Console.WriteLine(nextWindowEnd);
+                */
                 return false;
             }
 
             // Check if end window is before end next window + droptime next visit
-            if (endWindow + dropTime > nextWindowEnd)
+            if (endWindow < prevWindowStart + prevDropTime)//endWindow + dropTime > nextWindowEnd)
             {
+                /*
+                Console.WriteLine("hoi2");
+                Console.WriteLine(endWindow);
+                Console.WriteLine(prevWindowStart);
+                Console.WriteLine(prevDropTime);
+                */
                 return false;
             }
 
@@ -356,15 +395,34 @@ namespace LNS
         public bool CapacityCheck(Visit visit, int route)
         {
             // TODO: FIX CURRENT CAPACITY
-            /*
+            
             int currentCapacity = routes[route].GetRemainingCapacity();
+
             if (currentCapacity - visit.GetDemand() > 0)
             {
                 return true;
             }
             return false;
-            */
-            return true;
+        }
+
+        public int GetAmountOfRoutes()
+        {
+            return routes.Count;
+        }
+
+        public List<Route> GetRoutes()
+        {
+            return routes;
+        }
+
+        public double GetAverageRouteLength()
+        {
+            int totalLength = 0;
+            foreach (Route route in routes)
+            {
+                totalLength += route.GetAmountVisits();
+            }
+            return (double) totalLength / routes.Count;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace LNS
 
             // Get info on visits
             List<Visit> allVisits = new List<Visit>();
-            foreach (string newLine in lines)
+            foreach (string newLine in lines)//.GetRange(0, 100))
             {
                 string[] newParts = SplitLine(newLine);
                 int id = Int32.Parse(newParts[0]);
@@ -37,7 +37,7 @@ namespace LNS
                 int windowEndTime = Int32.Parse(newParts[5]);
                 int serviceTime = Int32.Parse(newParts[6]);
 
-                allVisits.Add(new Visit(id, windowStartTime, windowEndTime, demand, xCoordinate, yCoordinate, serviceTime));
+                allVisits.Add(new Visit(id, demand, windowStartTime, windowEndTime, xCoordinate, yCoordinate, serviceTime));
             }
 
             // Create problem class

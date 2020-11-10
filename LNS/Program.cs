@@ -53,7 +53,7 @@ namespace LNS
             int maxIterations = 1000;
             int discrepancies = 5; // discrep
             int attempts = 250; // a
-            int determinism = 5; // D
+            int determinism = 10; // D
 
             LargeNeighbourhoodSearch LNS = new LargeNeighbourhoodSearch(initialPlan, 
                 maxIterations, discrepancies, attempts, determinism);
