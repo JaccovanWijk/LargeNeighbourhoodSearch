@@ -14,6 +14,11 @@ namespace LNS
         double planCost;
         List<Visit> allVisits;
 
+        int minX = 1000000;
+        int minY = 1000000;
+        int maxX = 0;
+        int maxY = 0;
+
         public RoutingPlan(List<Route> routes, Problem problem)
         {
             this.routes = routes;
@@ -27,6 +32,27 @@ namespace LNS
                 foreach (Visit visit in route.GetVisits())
                 {
                     allVisits.Add(visit);
+
+                    // Get extrema coordinates
+                    int visitX = visit.GetX();
+                    int visitY = visit.GetY();
+
+                    if (visitX < minX)
+                    {
+                        minX = visitX;
+                    }
+                    if (visitX > maxX)
+                    {
+                        maxX = visitX;
+                    }
+                    if (visitY < minY)
+                    {
+                        minY = visitY;
+                    }
+                    if (visitY > maxY)
+                    {
+                        maxY = visitY;
+                    }
                 }
             }
         }
@@ -232,7 +258,7 @@ namespace LNS
                 {
                     // TODO: CHECK IF (TIMEWINDOWS, MAXSERVICETIME, )AND CAPACITY WORK, AND ITS OLD POSTITION
                     // Check if it fits in timewindow
-                    if (TimeWindowCheck(visit, (i,j)) && CapacityCheck(visit, i))
+                    if (TimeWindowCheck2(visit, (i,j)) && CapacityCheck(visit, i))
                     {
                         positions.Add((i, j));
                     }
@@ -392,6 +418,76 @@ namespace LNS
             return true;
         }
 
+
+        // Check ALL timewindows
+        public bool TimeWindowCheck2(Visit visit, (int,int) position)
+        {
+            // Get clone route and visits
+            Route route = routes[position.Item1].Clone();
+            List<Visit> visits = route.GetVisits();
+
+            // Place new visit in position
+            if (position.Item2 < visits.Count)
+            {
+                visits.Insert(position.Item2, visit);
+            }
+            else
+            {
+                visits.Add(visit);
+            }
+
+            // Keep track of time
+            double currentCost = 0;
+
+            // Add cost first visit, or begin window
+            double driveCost = problem.GetDistanceFromDepot(visits[0]);
+            double beginWindow = (double) visits[0].GetWindowStart();
+            double deliverCost = (double)visits[0].GetDropTime();
+
+            if (driveCost + deliverCost > beginWindow)
+            {
+                currentCost += driveCost + deliverCost;
+            }
+            else
+            {
+                currentCost = beginWindow;
+            }
+
+            // Add cost for all visits, or begin window
+            for (int i = 1; i < visits.Count; i++)
+            {
+                // Check if out of time window
+                if ((double)visits[i].GetWindowEnd() < currentCost)
+                {
+                    return false;
+                }
+
+                // Get new costs and update currentCost
+                driveCost = problem.GetVisitDistance(visits[i - 1], visits[i]);
+                beginWindow = visits[i].GetWindowStart();
+                deliverCost = visits[i].GetDropTime();
+
+                if (driveCost + deliverCost > beginWindow)
+                {
+                    currentCost += driveCost + deliverCost;
+                }
+                else
+                {
+                    currentCost = beginWindow;
+                }
+            }
+
+            // Check cost back to depot
+            driveCost = problem.GetDistanceFromDepot(visits[visits.Count - 1]);
+            if (currentCost + driveCost > problem.GetMaxServiceTime())
+            {
+                return false;
+            }
+
+            // all checks are good
+            return true;
+        }
+
         public bool CapacityCheck(Visit visit, int route)
         {
             // TODO: FIX CURRENT CAPACITY
@@ -423,6 +519,11 @@ namespace LNS
                 totalLength += route.GetAmountVisits();
             }
             return (double) totalLength / routes.Count;
+        }
+
+        public (int, int, int, int) GetExtrema()
+        {
+            return (minX, minY, maxX, maxY);
         }
     }
 }

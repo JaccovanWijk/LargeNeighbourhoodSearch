@@ -59,6 +59,9 @@ namespace LNS
                 maxIterations, discrepancies, attempts, determinism);
             RoutingPlan plan = LNS.Search();
             plan.PrintRoutingPlan();
+
+            PrintPlan printer = new PrintPlan();
+            printer.Draw(plan);
         }
     }
     

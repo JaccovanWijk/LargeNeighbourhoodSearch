@@ -40,7 +40,7 @@ namespace LNS
             for (int i = 0; i < maxIterations; i++)
             {
             */
-            while (bestPlan.GetAmountOfRoutes() > 28) {
+            while (bestPlan.GetAmountOfRoutes() > 30) {
                         
                 
 
@@ -77,11 +77,11 @@ namespace LNS
             }
             */
 
-            System.IO.File.WriteAllLines(@"C:\Users\Jacco\source\repos\LNS\LNS\WriteLines.txt", text);
+            //System.IO.File.WriteAllLines(@"C:\Users\Jacco\source\repos\LNS\LNS\WriteLines.txt", text);
 
             /*
             Problem problem = bestPlan.GetProblem();
-            Route route = bestPlan.GetRoutes()[4];
+            Route route = bestPlan.GetRoutes()[0];
             List<Visit> visits = route.GetVisits();
 
             Console.WriteLine(problem.GetDistanceFromDepot(route.GetVisits()[0]));
@@ -165,11 +165,11 @@ namespace LNS
                     // Print aantal iteraties/stappen
                     text.Add((bestPlan.GetAmountOfRoutes()).ToString() + "   " + iterations + "   " + toRemove + "   " + bestPlan.GetAmountVisits() / bestPlan.GetAmountOfRoutes() + "   " + bestPlan.GetAverageRouteLength());
                     Console.WriteLine("Current amount of routes: " + bestPlan.GetAmountOfRoutes());
-                    Console.WriteLine("Iterations: " + iterations);
-                    Console.WriteLine("toRemove: " + toRemove);
-                    Console.WriteLine("Visits / Amount of routes: " + (double) bestPlan.GetAmountVisits() / bestPlan.GetAmountOfRoutes());
-                    Console.WriteLine("Average Route length: " + (double) bestPlan.GetAverageRouteLength());
-                    Console.WriteLine();
+                    //Console.WriteLine("Iterations: " + iterations);
+                    //Console.WriteLine("toRemove: " + toRemove);
+                    //Console.WriteLine("Visits / Amount of routes: " + (double) bestPlan.GetAmountVisits() / bestPlan.GetAmountOfRoutes());
+                    //Console.WriteLine("Average Route length: " + (double) bestPlan.GetAverageRouteLength());
+                    //Console.WriteLine();
                     
                 }
                 else

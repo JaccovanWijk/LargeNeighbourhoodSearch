@@ -26,7 +26,7 @@ namespace LNS
 
             // Get info on visits
             List<Visit> allVisits = new List<Visit>();
-            foreach (string newLine in lines)//.GetRange(0, 100))
+            foreach (string newLine in lines)//.GetRange(0, 50))
             {
                 string[] newParts = SplitLine(newLine);
                 int id = Int32.Parse(newParts[0]);
