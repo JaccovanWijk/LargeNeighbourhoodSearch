@@ -17,9 +17,20 @@ namespace LNS
         Random rand = new Random();
 
         int currentAttempts;
+        List<int> bestEachIteration;
+        List<int> capacityEachIteration;
+        List<int> routesEachIteration;
+        List<int> maxDistanceEachIteration;
+        List<int> AverageDeviationEachIteration;
+        List<int> meanEachIteration;
+        List<int> costEachIteration;
+        List<int> toRemoveEachIteration;
+        int totalRemoved;
+
+        List<List<int>> wereInRouteTogether = new List<List<int>>();
 
         int iterations = 0;
-        List<string> text = new List<string>();
+        //List<string> text = new List<string>();
 
         public LargeNeighbourhoodSearch(RoutingPlan plan, int maxIterations, int discrepancies,
             int attempts, int determinism)
@@ -30,24 +41,48 @@ namespace LNS
             this.discrepancies = discrepancies;
             this.attempts = attempts;
             this.determinism = determinism;
+
+
+            
+            for (int i = 0; i < 100; i++)
+            {
+                List<int> row = new List<int>();
+                for (int j = 0; j < 100; j++)
+                {
+                    row.Add(0);
+                }
+                wereInRouteTogether.Add(row);
+            }
         }
 
 
         public RoutingPlan Search()
         {
             currentAttempts = 0;
-            /*
-            for (int i = 0; i < maxIterations; i++)
-            {
-            */
-            while (bestPlan.GetAmountOfRoutes() > 30) {
+            bestEachIteration = new List<int>();
+            
+            capacityEachIteration = new List<int>();
+            routesEachIteration = new List<int>();
+            maxDistanceEachIteration = new List<int>();
+            AverageDeviationEachIteration = new List<int>();
+            meanEachIteration = new List<int>();
+            costEachIteration = new List<int> { (int)(bestPlan.CalculateCost() * 100) };
+            toRemoveEachIteration = new List<int>();
+            totalRemoved = 0;
+            
+            for (int i = 0; i < maxIterations; i++) {
+            
+            //while (bestPlan.GetAmountOfRoutes() > 10) {
                         
                 
 
                 // Check if currentAttempts >= attempts
                 if (currentAttempts >= attempts)
                 {
-                    toRemove++;
+                    if (toRemove < 100)
+                    {
+                        toRemove++;
+                    }
                     currentAttempts = 0;
                 }
 
@@ -56,45 +91,62 @@ namespace LNS
 
                 // Copy bestPlan
                 RoutingPlan newPlan = new RoutingPlan(bestPlan.CopyRoutes(), bestPlan.GetProblem());
+                RoutingPlan copyPlan = new RoutingPlan(bestPlan.CopyRoutes(), bestPlan.GetProblem());
 
                 List<Visit> removed = RemoveVisits(newPlan);
+                totalRemoved += toRemove;
+
+                // copy removed
+                List<Visit> removedCopy = new List<Visit>();
+                foreach (Visit visit1 in removed)
+                {
+                    removedCopy.Add(visit1);
+                }
+
                 Reinsert(newPlan, removed, discrepancies);
 
                 if (bestPlan.CalculateCost() < currentCost)
                 {
                     currentAttempts = 0;
+
+                    // Add to weretogether
+                    foreach (Route route in copyPlan.GetRoutes())
+                    {
+                        foreach(Visit visit in removedCopy)
+                        {
+                            if (route.GetIds().Contains(visit.GetId()))
+                            {
+                                foreach (Visit v in route.GetVisits())
+                                {
+                                    if (v.GetId() != visit.GetId())
+                                    {
+                                        wereInRouteTogether[visit.GetId() - 1][v.GetId() - 1]++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                 }
                 else
                 {
                     currentAttempts++;
                 }
+
+                bestEachIteration.Add(bestPlan.GetAmountOfRoutes());
+                
+                capacityEachIteration.Add(bestPlan.GetPercentageCapacity());
+                routesEachIteration.Add(bestPlan.GetAmountOfRoutes());
+                maxDistanceEachIteration.Add(bestPlan.GetLongestNormDistance());
+                AverageDeviationEachIteration.Add(bestPlan.GetAverageDeviationRouteLength());
+                meanEachIteration.Add((int)(bestPlan.GetAverageRouteLength() * 100));
+                costEachIteration.Add((int)(bestPlan.CalculateCost() * 100));
+                toRemoveEachIteration.Add(toRemove);
+                
             }
 
-            /*
-            foreach (Route route in bestPlan.GetRoutes())
-            {
-                Console.WriteLine(route.GetVisits().Count);
-            }
-            */
+            //Console.WriteLine(totalRemoved);
 
-            //System.IO.File.WriteAllLines(@"C:\Users\Jacco\source\repos\LNS\LNS\WriteLines.txt", text);
-
-            /*
-            Problem problem = bestPlan.GetProblem();
-            Route route = bestPlan.GetRoutes()[0];
-            List<Visit> visits = route.GetVisits();
-
-            Console.WriteLine(problem.GetDistanceFromDepot(route.GetVisits()[0]));
-            Console.WriteLine(visits[0].GetWindowStart() + " <-> " + visits[0].GetWindowEnd());
-
-            for (int i = 1; i < route.GetVisits().Count - 1; i++) 
-            {
-                Console.WriteLine(problem.GetVisitDistance(visits[i-1], visits[i]));
-                Console.WriteLine(visits[i].GetWindowStart() + " <-> " + visits[i].GetWindowEnd());
-            }
-
-            Console.WriteLine(problem.GetDistanceFromDepot(visits[visits.Count - 1]));
-            */
             return bestPlan;
         }
 
@@ -117,13 +169,18 @@ namespace LNS
                 // Rank non-removed visits with relatedness
                 List<Visit> ranked = plan.RankRelatedness(randomVisit, removedVisits);
 
-                // Get random double between 0 and 1
-                double random = rand.NextDouble();
+                if (ranked.Count > 0)
+                {
 
-                // Get slightly random element from ranked list and remove it
-                Visit newRemoved = ranked[Convert.ToInt32((ranked.Count-1) * Math.Pow(random, determinism))];
-                //plan.RemoveVisit(newRemoved);
-                removedVisits.Add(newRemoved);
+                    // Get random double between 0 and 1
+                    double random = rand.NextDouble();
+
+                    // Get slightly random element from ranked list and remove it
+                    Visit newRemoved = ranked[Convert.ToInt32((ranked.Count - 1) * Math.Pow(random, determinism))];
+
+                    //plan.RemoveVisit(newRemoved);
+                    removedVisits.Add(newRemoved);
+                }
             }
 
             return removedVisits;
@@ -132,49 +189,15 @@ namespace LNS
         
         public void Reinsert(RoutingPlan plan, List<Visit> toInsert, int discrep)//List<Route> routes, List<Visit> toInsert, int discrep)
         {
-            //List<Visit> toInsert = plan.GetRemoved();
-
-            /*
-            Console.WriteLine(1);
-            bestPlan.PrintRoutingPlan();
-
-            Console.WriteLine(2);
-            plan.Tester(toInsert[0], (50, 1));
-            plan.PrintRoutingPlan();
-
-            Console.WriteLine(3);
-            bestPlan.PrintRoutingPlan();
-            */
-
-            // WORKING FOR TESTER, BUT CODE UNDERNEATH DOESNT GET THE RIGHT ROUTES AND NEVER DELETES!
-
             iterations++;
 
-            //Console.WriteLine(toInsert.Count);
             if (toInsert.Count == 0)
             {
-                // Check for new best plan
-                // TODO: GET COST WHEN CALCULATING RANKEDPOSITIONS????y
                 double newCost = plan.CalculateCost();
                 if (newCost < bestPlanCost)
                 {
-                    //plan.PrintRoutingPlan();
                     bestPlan = plan;
                     bestPlanCost = newCost;
-
-                    // Print aantal iteraties/stappen
-                    text.Add((bestPlan.GetAmountOfRoutes()).ToString() + "   " + iterations + "   " + toRemove + "   " + bestPlan.GetAmountVisits() / bestPlan.GetAmountOfRoutes() + "   " + bestPlan.GetAverageRouteLength());
-                    Console.WriteLine("Current amount of routes: " + bestPlan.GetAmountOfRoutes());
-                    //Console.WriteLine("Iterations: " + iterations);
-                    //Console.WriteLine("toRemove: " + toRemove);
-                    //Console.WriteLine("Visits / Amount of routes: " + (double) bestPlan.GetAmountVisits() / bestPlan.GetAmountOfRoutes());
-                    //Console.WriteLine("Average Route length: " + (double) bestPlan.GetAverageRouteLength());
-                    //Console.WriteLine();
-                    
-                }
-                else
-                {
-                    //currentAttempts++;
                 }
             }
             else
@@ -204,7 +227,56 @@ namespace LNS
                 
             }
         }
+
+        public List<int> GetBestEachIteration()
+        {
+            return bestEachIteration;
+        }
+
+        public List<int> GetToRemoveEachIteration()
+        {
+            return toRemoveEachIteration;
+        }
+
+        public List<int> GetCostEachIteration()
+        {
+            return costEachIteration;
+        }
+
+        public List<int> GetCapacityEachIteration()
+        {
+            return capacityEachIteration;
+        }
         
+        public List<int> GetRoutesEachIteration()
+        {
+            return routesEachIteration;
+        }
+
+        public List<int> GetMaxDistanceEachIteration()
+        {
+            return maxDistanceEachIteration;
+        }
+
+        public List<List<int>> GetRoutesTogether()
+        {
+            return wereInRouteTogether;
+        }
+
+        public int GetTotalRemoved()
+        {
+            return totalRemoved;
+        }
+
+        public List<int> GetAverageDeviationRouteLength()
+        {
+            return AverageDeviationEachIteration;
+        }
+
+        public List<int> GetMeanRouteLength()
+        {
+            return meanEachIteration;
+        }
 
         public void PrintRoutingPlan(List<Route> routes)
         {

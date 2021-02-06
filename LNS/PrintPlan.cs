@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using IronXL;
 
 namespace LNS
 {
@@ -72,17 +73,89 @@ namespace LNS
                     point2 = new PointF(depotX, depotY);
                     gfx.DrawLine(pen, point1, point2);
                 }
-                /*
-                for (int i = 0; i < 10_000; i++)
-                {
-                    pen.Color = Color.FromArgb(rand.Next());
-                    var pt1 = new Point(rand.Next(bmp.Width), rand.Next(bmp.Height));
-                    var pt2 = new Point(rand.Next(bmp.Width), rand.Next(bmp.Height));
-                    gfx.DrawLine(pen, pt1, pt2);
-                }
-                */
+
                 bmp.Save("RouteVisualisation.png");
             }
+        }
+
+        public void printXLS(string filename, List<List<int>> allIterations, List<string> files)
+        {
+            WorkBook workbook = WorkBook.Load(filename);
+            WorkSheet sheet = workbook.DefaultWorkSheet;
+
+            for (int i = 0; i < allIterations.Count; i++)
+            {
+                sheet.SetCellValue(0, i, files[i]);
+                for (int j = 1; j < allIterations[i].Count + 1; j++)
+                {
+                    sheet.SetCellValue(j, i, allIterations[i][j - 1]);
+                }
+            }
+            //Save Changes
+            workbook.SaveAs(filename);
+
+
+            /*
+            //iterate over range of cells
+            foreach (var cell in range)
+            {
+                Console.WriteLine("Cell {0} has value '{1}", cell.RowIndex, cell.Value);
+                if (cell.IsNumeric)
+                {
+                    //Get decimal value to avoid floating numbers precision issue
+                    total += cell.DecimalValue;
+                }
+            }
+            //check formula evaluation
+            if (sheet["A11"].DecimalValue == total)
+            {
+                Console.WriteLine("Basic Test Passed");
+            }
+            */
+        }
+
+        public void PrintDeleted(string filename, List<List<List<int>>> matrices, List<string> files)
+        {
+            WorkBook workbook = WorkBook.Load(filename);
+            WorkSheet sheet = workbook.DefaultWorkSheet;
+
+            for (int i = 0; i < matrices.Count; i++)
+            {
+                int x = (int)Math.Floor((decimal)i / 2);
+                sheet.SetCellValue(0, matrices[0].Count * i, files[x]);
+                for (int j = 0; j < matrices[0].Count; j++)
+                {
+                    for (int k = 1; k < matrices[i][j].Count + 1; k++)
+                    {
+                        sheet.SetCellValue(k, j + (matrices[0].Count * i), matrices[i][j][k - 1]);
+                    }
+                }
+                Console.WriteLine("Printed" + (i + 1) + "/" + matrices.Count);
+            }
+            //Save Changes
+            workbook.SaveAs(filename);
+        }
+
+        public void PrintMatrices(string filename, List<List<List<int>>> matrices, List<string> files)
+        {
+            WorkBook workbook = WorkBook.Load(filename);
+            WorkSheet sheet = workbook.DefaultWorkSheet;
+
+            for (int i = 0; i < matrices.Count; i++)
+            {
+                sheet.SetCellValue(i * matrices[0].Count, 0, files[i]);
+                for (int j = 0; j < matrices[0].Count; j++)
+                {
+                    for (int k = 1; k < matrices[i][j].Count + 1; k++)
+                    {
+                        sheet.SetCellValue(k + (matrices[0].Count * i) - 1, j + 1, matrices[i][j][k - 1]);
+                    }
+                }
+                Console.WriteLine("Printed" + (i + 1) + "/" + matrices.Count);
+            }
+
+            //Save Changes
+            workbook.SaveAs(filename);
         }
     }
 }

@@ -101,7 +101,31 @@ namespace LNS
                     break;
                 }
             }
+            /*
+            Console.WriteLine("Before");
+            foreach(Route route in routes)
+            {
+                Console.WriteLine("Route");
+                List<Visit> visits = route.GetVisits();
+                foreach (Visit v in visits)
+                {
+                    Console.WriteLine(v.GetId());
+                }
+            }*/
 
+            // Place visit at next position
+            routes[position.Item1].AddVisit(visit, position.Item2);
+            /*
+            Console.WriteLine("after " + position.Item1 + " " + position.Item2);
+            foreach (Route route in routes)
+            {
+                Console.WriteLine("Route");
+                List<Visit> visits = route.GetVisits();
+                foreach (Visit v in visits)
+                {
+                    Console.WriteLine(v.GetId());
+                }
+            }*/
 
             // Check for empty routes and delete them
             int count = routes.Count;
@@ -113,10 +137,6 @@ namespace LNS
                 }
                 count = routes.Count;
             }
-
-
-            // Place visit at next position
-            routes[position.Item1].AddVisit(visit, position.Item2);
         }
 
         public List<Route> CopyRoutes()
@@ -141,7 +161,7 @@ namespace LNS
                 planCost += problem.GetDistanceFromDepot(visits[0]);
 
                 // distances first visit -> ... -> last visit
-                for (int i = 1; i < visits.Count - 1; i++)
+                for (int i = 0; i < visits.Count - 1; i++)
                 {
                     planCost += problem.GetVisitDistance(visits[i], visits[i + 1]);
                 }
@@ -150,6 +170,51 @@ namespace LNS
                 planCost += problem.GetDistanceFromDepot(visits[visits.Count - 1]);
             }
             return planCost;
+        }
+
+        public int GetLongestNormDistance()
+        {
+            double maxCost = 0;
+            foreach (Route route in routes)
+            {
+                List<Visit> visits = route.GetVisits();
+
+                double current = problem.GetDistanceFromDepot(visits[0]);
+                if (current > maxCost)
+                {
+                    maxCost = current;
+                }
+
+                for (int i = 1; i < visits.Count - 1; i++)
+                {
+                    current = problem.GetVisitDistance(visits[i], visits[i + 1]);
+                    if (current > maxCost)
+                    {
+                        maxCost = current;
+                    }
+                }
+
+                current = problem.GetDistanceFromDepot(visits[visits.Count - 1]);
+                if (current > maxCost)
+                {
+                    maxCost = current;
+                }
+            }
+
+            return (int) (maxCost / problem.GetMaxDistance() * 100);
+        }
+
+        public int GetAverageDeviationRouteLength()
+        {
+            double mean = GetAverageRouteLength();
+
+            double totalDeviation = 0;
+            foreach (Route route in routes)
+            {
+                totalDeviation += Math.Abs(route.GetAmountVisits() - mean);
+            }
+
+            return (int)(totalDeviation / routes.Count * 100);
         }
 
         public double GetPlanCost()
@@ -426,6 +491,7 @@ namespace LNS
             Route route = routes[position.Item1].Clone();
             List<Visit> visits = route.GetVisits();
 
+
             // Place new visit in position
             if (position.Item2 < visits.Count)
             {
@@ -436,6 +502,8 @@ namespace LNS
                 visits.Add(visit);
             }
 
+
+
             // Keep track of time
             double currentCost = 0;
 
@@ -444,36 +512,44 @@ namespace LNS
             double beginWindow = (double) visits[0].GetWindowStart();
             double deliverCost = (double)visits[0].GetDropTime();
 
-            if (driveCost + deliverCost > beginWindow)
+            if (driveCost + currentCost > beginWindow)
             {
                 currentCost += driveCost + deliverCost;
             }
             else
             {
-                currentCost = beginWindow;
+                currentCost = beginWindow + deliverCost;
+            }
+
+
+            if (visits[0].GetWindowEnd() < currentCost)
+            {
+                return false;
             }
 
             // Add cost for all visits, or begin window
             for (int i = 1; i < visits.Count; i++)
             {
-                // Check if out of time window
-                if ((double)visits[i].GetWindowEnd() < currentCost)
-                {
-                    return false;
-                }
-
                 // Get new costs and update currentCost
                 driveCost = problem.GetVisitDistance(visits[i - 1], visits[i]);
                 beginWindow = visits[i].GetWindowStart();
                 deliverCost = visits[i].GetDropTime();
 
-                if (driveCost + deliverCost > beginWindow)
+                if (driveCost + currentCost > beginWindow)
                 {
                     currentCost += driveCost + deliverCost;
                 }
                 else
                 {
-                    currentCost = beginWindow;
+                    currentCost = beginWindow + deliverCost;
+                }
+
+                //Console.WriteLine("cost " + currentCost);
+                //Console.WriteLine("End " + (double)visits[i].GetWindowEnd());
+                // Check if out of time window
+                if ((double)visits[i].GetWindowEnd() < currentCost)
+                {
+                    return false;
                 }
             }
 
@@ -490,7 +566,7 @@ namespace LNS
 
         public bool CapacityCheck(Visit visit, int route)
         {
-            // TODO: FIX CURRENT CAPACITY
+            //return true;
             
             int currentCapacity = routes[route].GetRemainingCapacity();
 
@@ -511,6 +587,7 @@ namespace LNS
             return routes;
         }
 
+
         public double GetAverageRouteLength()
         {
             int totalLength = 0;
@@ -524,6 +601,21 @@ namespace LNS
         public (int, int, int, int) GetExtrema()
         {
             return (minX, minY, maxX, maxY);
+        }
+
+        public int GetPercentageCapacity()
+        {
+            double totalPercentage = 0;
+            foreach(Route route in routes)
+            {
+                double a = route.GetRemainingCapacity();
+                double b = problem.GetCapacity();
+
+                double freeCapacity = a/b;
+                totalPercentage += (double)(1 - freeCapacity);
+            }
+            int percentage = (int) (totalPercentage / routes.Count * 100);
+            return percentage;
         }
     }
 }

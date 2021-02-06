@@ -68,6 +68,16 @@ namespace LNS
             return visits;
         }
 
+        public List<int> GetIds()
+        {
+            List<int> Ids = new List<int>();
+            foreach (Visit visit in visits)
+            {
+                Ids.Add(visit.GetId());
+            }
+            return Ids;
+        }
+
         public int GetAmountVisits()
         {
             return visits.Count;
